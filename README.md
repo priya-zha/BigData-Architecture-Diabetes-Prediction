@@ -1,194 +1,143 @@
-# Python Django Sqlite3
+# 🏥 Big Data Architecture for Diabetes Prediction — Django + Kafka + Spark + Cassandra
+
+A comprehensive real-time big data pipeline for diabetes prediction. This extended version of the diabetes prediction system includes geospatial analysis with Nepal district data, Streamlit dashboards, multiple Spark streaming configurations, batch processing, Cassandra storage, and a Django REST API backend.
+
+---
+
+## 📌 Description
+
+This project builds a production-grade real-time data pipeline combining Django, Apache Kafka, Apache Spark Streaming, and Apache Cassandra to process, predict, and store diabetes patient data at scale. It extends the core diabetes prediction model with:
+
+- **Geospatial visualization** of diabetes distribution across Nepal's districts using GeoJSON
+- **Multiple Spark streaming scripts** for flexible stream processing and ML inference
+- **Batch processing** alongside real-time streaming via `batch.py`
+- **Cassandra output** for scalable NoSQL persistence
+- **Streamlit dashboards** for interactive data exploration
+- A **Django REST API** for data ingestion and serving predictions
+
+---
+
+## 🛠️ Tech Stack
+
+| Technology | Purpose |
+|---|---|
+| Python | Core programming language |
+| Django + SQLite3 | REST API backend and local database |
+| Apache Kafka (3 brokers, 10 partitions) | Real-time data streaming |
+| Apache Spark (PySpark) | Stream and batch ML inference |
+| Apache Cassandra | Scalable NoSQL data storage |
+| Apache Zookeeper | Kafka cluster coordination |
+| Streamlit | Interactive data dashboards |
+| TensorFlow / Keras | Diabetes prediction model |
+| GeoJSON + Nepal district data | Geospatial diabetes distribution mapping |
+| Pandas / NumPy | Data preprocessing |
+
+---
+
+## 📁 Project Structure
+
+```
+├── manage.py                         # Django management script
+├── post_data.py                      # POST data to Django API (v1)
+├── post_data_v2.py                   # POST data to Django API (v2)
+├── consumer.py                       # Kafka consumer script
+├── spark.py                          # Spark Streaming + Kafka + prediction
+├── sparkdata.py                      # Spark data utilities
+├── stream.py                         # Streamlit dashboard (v1)
+├── stream1.py                        # Streamlit dashboard (v2)
+├── streaming.py                      # Extended Spark streaming
+├── batch.py                          # Batch processing script
+├── batchy.py                         # Alternative batch processing
+├── classifiers.py                    # Multiple ML classifier comparisons
+├── cassandra_output.py               # Cassandra write utilities
+├── diabetes_model.py                 # PySpark diabetes model
+├── diabetes_m.py                     # Alternative model script
+├── diabetes_train_model_pima.ipynb   # Model training notebook
+├── training_with_4_fetaures.ipynb    # 4-feature model training
+├── diabetic.csv                      # Diabetes patient dataset
+├── districts.csv                     # Nepal district data
+├── district_withId.csv               # Nepal districts with IDs
+├── nepal.geojson                     # Nepal geospatial boundary data
+├── requirements.txt                  # Python dependencies
+├── finalmodel/                       # Saved ML models
+├── templates/                        # Django HTML templates
+├── hearts/                           # Heart disease related data
+└── Git_files/                        # Demo screenshots
+```
+
+---
+
+## ⚙️ Setup Instructions
+
+### 1. Clone and Set Up Virtual Environment
+```bash
+git clone https://github.com/priya-zha/BigData-Architecture-Diabetes-Prediction.git
+cd BigData-Architecture-Diabetes-Prediction
+python3 -m venv dependency_env
+source dependency_env/bin/activate
+pip install -r requirements.txt
+```
+
+### 2. Run Django Backend
+```bash
+python3 manage.py makemigrations
+python3 manage.py migrate
+python3 manage.py runserver
+# API: http://localhost:8000/api
+```
+
+### 3. Setup Kafka (3 Brokers)
+```bash
+cp config/server.properties config/server-1.properties
+cp config/server.properties config/server-2.properties
+# Update broker.id, listeners, log.dir in each config
+sudo systemctl start zookeeper
+sudo systemctl start kafka && sudo systemctl start kafka1 && sudo systemctl start kafka2
+bin/kafka-topics.sh --create --zookeeper localhost:2181 --replication-factor 3 --partitions 10 --topic hospital
+```
+
+### 4. Post Data
+```bash
+python post_data.py
+```
 
-## SETUP
-   - [x] Create a virtual env, for dependency issues use python 3.7.1  
-   	* `$ python3 -m venv dependency_env`
+### 5. Run Spark Streaming
+```bash
+python spark.py
+# Spark UI: http://localhost:4040
+```
 
-   - [x] Activate virtualenv
-	* `$ source dependency_env/bin/activate`
+### 6. Setup Cassandra (Optional)
+```bash
+pip3 install cassandra-driver
+cqlsh
+# CREATE KEYSPACE diabetesdb WITH replication = {'class':'SimpleStrategy', 'replication_factor':3};
+# USE diabetesdb;
+# CREATE TABLE diabetesb (...);
+```
 
-   - [x] Virtual_env package reqirements
-	* `$ pip install -r requirements.txt`
+---
 
+## 🖼️ Screenshots
 
-### Django  
- * `$ python3 manage.py makemigrations`  
- * `$ python3 manage.py migrate`  
- * `$ python3 manage.py runserver`
+![Spark Job](./Git_files/sparkjob.png)
+![Diabetic Prediction](./Git_files/diabetic.png)
+![No Diabetes](./Git_files/nodiabetes.png)
+![Cassandra](./Git_files/cassandra.png)
 
-### Api views
- * http://localhost:8000/api
+---
 
-### Data input magic
- * `$ python post_data.py`
+## 📋 Requirements
 
-### Updates
- * Integrated realtime data pushing code
- * Real time Api generation
+- Python 3.7.1 (recommended)
+- Java 8+
+- Apache Kafka + Zookeeper
+- Apache Spark 2.4.x + `spark-streaming-kafka-0-8-assembly_2.11-2.4.5.jar`
+- Apache Cassandra
+- Django, Streamlit, TensorFlow/Keras
 
-#### For any migration related errors
-> Delete migrations folder and db.sqlite file.Then, create new migrations folder and a \_\_init\_\_.py file inside it. Finally run django 3 commands to remove th error 😀😀.
+---
 
-### Create Multibrokers for Kafka (I've created 3 brokers in total with 10 partitions) 
- * To create config files for each broker:
- 1. Navigate to the kafka folder
- 2. Open a Terminal
- 3. Execute the following copy command:
+## 👩‍💻 Author
 
- 	`$ cp config/server.properties config/server-1.properties`
- 	
- 	`$ cp config/server.properties config/server-2.properties`
-
- 4. Once you copy the config files, copy paste the following content to the config files respectively.
-
- 	For config/server1.properties:
-
- 	`broker.id=1`
-
- 	`listeners=PLAINTEXT://:9093`
-
- 	`log.dir=/tmp/kafka-logs-1`
-
- 	`zookeeper.connect=localhost:2181`
-
- 	For config/server2.properties:
-
- 	`broker.id=2`
-
- 	`listeners=PLAINTEXT://:9094`
-
- 	`log.dir=/tmp/kafka-logs-2`
-
- 	`zookeeper.connect=localhost:2181`
-
-
- 5. Setup Kafka Systemd Unit Files (This will help to manage Kafka services to start/stop using the 	systemctl command)
-
- 	First, create systemd unit file for Zookeeper with below command:
-
- 	`vim /etc/systemd/system/zookeeper.service`
-
- 	Then Add below contnet:
-	
-	
-	
-	
-
-    [Unit]<br/> 
-	Description=Apache Zookeeper server <br/>
-	Documentation=http://zookeeper.apache.org <br/>
-	Requires=network.target remote-fs.target <br/>
-	After=network.target remote-fs.target <br/>
-	[Service] <br/>
-	Type=simple <br/>
-	ExecStart=/usr/local/kafka/bin/zookeeper-server-start.sh /usr/local/kafka/config/zookeeper.properties <br/>
-	ExecStop=/usr/local/kafka/bin/zookeeper-server-stop.sh <br/>
-	Restart=on-abnormal <br/>
-	[Install] <br/>
-	WantedBy=multi-user.target<br/>
-	
-	
-	
-
-
-	Save the file and close it.
-
-	Next, to create a Kafka systemd unit file using the following command:
-	
-	`vim /etc/systemd/system/kafka.service`
-
-	Then ,add the below content.
-
-
-
-
-    [Unit]<br/>
-	Description=Apache Kafka Server<br/>
-	Documentation=http://kafka.apache.org/documentation.html<br/>
-	Requires=zookeeper.service<br/>
-	[Service]<br/>
-	Type=simple<br/>
-	Environment="JAVA_HOME=/usr/lib/jvm/java-1.11.0-openjdk-amd64"<br/>
-	ExecStart=/usr/local/kafka/bin/kafka-server-start.sh /usr/local/kafka/config/server.properties<br/>
-	ExecStop=/usr/local/kafka/bin/kafka-server-stop.sh<br/>
-	[Install]<br/>
-	WantedBy=multi-user.target<br/>
-
-
-
-
-
-	Save file and close.
-	
-	Repeat for kafka1.service and kafka2.service in a similar manner as above (kafka.service)
-
-6. `systemctl daemon-reload`
-
-
-### Start Kafka Server And Zookeeper
-
- * `$ sudo systemctl start zookeeper`  
- * `$ sudo systemctl start kafka`  
- * `$ sudo systemctl start kafka1`
- * `$ sudo systemctl start kafka2`
-
- 	To check whether brokers are running or not
-
- * `$ sudo systemctl status kafka`
- * `$ sudo systemctl status kafka1`
- * `$ sudo systemctl status kafka2`
-
-
-### Create a Topic in Kafka
-
- * `cd /usr/local/kafka`  
- * `$ bin/kafka-topics.sh --create --zookeeper localhost:2181 --replication-factor 3 --partitions 10 	--topic hospital`  
-
-
-### Kafka Consumer
- * `cd /usr/local/kafka` 
- * `bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 localhost:9093 localhost:9094 --topic hospital  --from-beginning` 
- OR
- * Run python consumer.py 
-
-
-### Spark Streaming and analysis
- * Make sure you have "spark-streaming-kafka-0-8-assembly_2.11-2.4.5.jar" folder on your pc (FOR OFFLINE MODE) ..If not , then  download it 
- * run python spark.py
-
- SPARK UI
- * http://localhost:4040
-
-
-### To save on Cassandra
-
- * First install cassandra driver using : pip3 install cassandra-driver
- * Open your terminal and type 'cqlsh'
- * now create a keyspace(i.e. database) using:'CREATE KEYSPACE diabetesdb
-WITH replication = {'class':'SimpleStrategy', 'replication_factor' : 3};'
-
- * Then type : 'USE diabetesdb;'
- * Then type: 'CREATE TABLE diabetesb(
-   name text PRIMARY KEY,
-   age int,
-   sex int,
-   basofils int,
-   and so on (jati ota dataframe ma columns xa)
-   );'
-
- * To check: Select * from diabetesb;
-
-
-#### diabetes prediction with spark jobs
-![Demo](./Git_files/sparkjob.png)
-![Demo](./Git_files/diabetic.png)
-![Demo](./Git_files/nodiabetes.png)
-![Demo](./Git_files/cassandra.png)
-#### first version
-![Demo](./Git_files/first.png)
-#### second version
-![Demo](./Git_files/second.png)
-#### third version
-![Demo](./Git_files/third.png)
-
-
+**Priya** — [@priya-zha](https://github.com/priya-zha)
